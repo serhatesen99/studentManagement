@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Öğrenci Yönetim</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      background-color: #7991aa;
+    }
+  </style>
+
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="collapse navbar-collapse" id="navbarTogglerDemo01">
+      <a class="navbar-brand">Öğrenci Yönetim Sistemi</a>
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" style="color: black" href="./index.html">Kayıt Oluştur</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" style="color: black" href="./students.html" target="_self">Kayıt Görüntüle</a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+
+  <table id="studentTable" class="table">
+    <thead>
+      <tr>
+        <th></th>
+        <th>İsim</th>
+        <th>Öğrenci ID</th>
+        <th>Sınıf</th>
+        <th></th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>  </tbody>
+  </table>
+
+  <div class="container">
+    <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">
+      <div class="col-md-4 d-flex align-items-center">
+        <span class="mb-3 mb-md-0 text-body-secondary font-weight-bold">© 2024 Webbilir</span>
+      </div>
+      <ul class="nav col-md-4 justify-content-end list-unstyled d-flex">
+        <li class="ms-3">
+          <a class="text-body-secondary" href="https://www.linkedin.com/company/webbilir/posts/?feedView=all">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+              <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
+            </svg>
+          </a>
+        </li>
+      </ul>
+    </footer>
+  </div>
+
+  <div id="myModal" class="modal">
+    <div class="modal-content">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-md-6">
+            <form id="studentForm">
+              <div class="form-group row">
+                <label for="inputName" class="col-sm-2 col-form-label">İsim</label>
+                <div class="col-sm-10">
+                  <input type="text" class="form-control" id="inputName" placeholder="İsim">
+                </div>
+              </div>
+              <div class="form-group row">
+                <label for="inputStudentID" class="col-sm-2 col-form-label">ÖğrenciID</label>
+                <div class="col-sm-10">
+                  <input type="text" class="form-control" id="inputStudentID" placeholder="Öğrenci ID">
+                </div>
+              </div>
+              <div class="form-group row">
+                <label for="inputClass" class="col-sm-2 col-form-label">Sınıf</label>
+                <div class="col-sm-10">
+                  <select class="form-control" id="inputClass">
+                    <option>A</option>
+                    <option>B</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group row">
+                <div class="col-sm-10">
+                  <button type="button" class="btn btn-success" id="saveButton" onclick="submit()">Kaydet</button>
+                  <button type="button" class="btn btn-danger" id="close" onclick="closeModal()">Kapat</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>    
+    </div>
+  </div>
+
+  <script>
+    var updateId;
+    document.getElementById("saveButton").addEventListener("click", (e) => {
+      e.preventDefault();
+      console.log(updateId);
+      submit(updateId);
+    })
+
+    async function loadStudents() {
+      const response = await fetch('http://localhost:3000/api/students');
+      const students = await response.json();
+      
+      const tbody = document.querySelector('#studentTable tbody');
+      tbody.innerHTML = '';
+      let idx = 1;
+      
+      students.forEach(student => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+              <td>${idx})</td>
+              <td>${student.Name}</td>
+              <td>${student.Id}</td>
+              <td>${student.ClassId === 1 ? 'A' : 'B'}</td>
+              <td><button class="btn btn-primary" onclick="updateStudent('${student.Id}')">Güncelle</button></td>
+              <td><button class="btn btn-danger" onclick="deleteStudent('${student.Id}')">Sil</button></td>
+          `;
+          tbody.appendChild(tr);
+          idx += 1;
+      });
+  }
+  loadStudents();
+
+  async function deleteStudent(id) {
+    const response = await fetch(`http://localhost:3000/api/students/${id}`, {
+        method: 'DELETE'
+    });
+    
+    if(response.ok) {
+        loadStudents();
+    } else {
+        console.error('Bir hata oluştu');
+    }
+  } 
+
+  function updateStudent(id) {
+    updateId = id;
+    document.getElementById("myModal").style.display = "block"; 
+  }
+
+  async function submit(updateId) {
+    const Name = document.getElementById('inputName').value;
+    const Id = document.getElementById('inputStudentID').value;
+    const ClassId = document.getElementById('inputClass').value;
+      try {
+            const response = await fetch('http://localhost:3000/api/students/' + updateId, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ Name, Id, ClassId })
+            });
+    
+            if (response.ok) {
+                
+                await loadStudents();
+            } else {
+                console.error('İstek gönderilirken bir hata oluştu:');
+            }
+        } catch (error) {
+            console.error('İstek gönderilirken bir hata oluştu:', error);
+        }
+  }
+
+  function closeModal() {
+    document.getElementById("myModal").style.display = "none";
+  }
+
+  </script>
+
+</body>
+</html>
